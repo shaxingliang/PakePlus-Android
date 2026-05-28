@@ -1,11 +1,918 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>灰度值定量分析平台 · 专业版</title>
+    <style>
+        /* ========== 主程序原有样式 (完全保留) ========== */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f0f2f6;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 1600px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            padding: 24px 28px 28px;
+            transition: all 0.2s;
+        }
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1.5px solid #e9edf2;
+        }
+        .title-section h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            color: #1a2c3e;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #1a4c6e, #2c6e9e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .subtitle {
+            font-size: 0.85rem;
+            color: #5b7a9a;
+            font-weight: 450;
+            border-left: 3px solid #2c6e9e;
+            padding-left: 12px;
+            margin-top: 4px;
+        }
+        .dev-info {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c6e9e;
+            background: #eef3fc;
+            padding: 6px 16px;
+            border-radius: 40px;
+            white-space: nowrap;
+            margin-left: 12px;
+        }
+        /* 顶部工具栏 */
+        .top-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 24px;
+            background: #f9fafc;
+            padding: 12px 20px;
+            border-radius: 28px;
+            border: 1px solid #eef2f6;
+        }
+        .tool-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 6px 16px;
+            border-radius: 60px;
+            border: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        .tool-group button, .tool-group select, .tool-group input {
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            background: white;
+            border: 1px solid #dce3ec;
+            cursor: pointer;
+        }
+        .slider-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input[type="range"] {
+            width: 130px;
+        }
+        /* 主区域：左右布局 */
+        .main-layout {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+        .canvas-area-wrapper {
+            flex: 3;
+            min-width: 280px;
+        }
+        .canvas-area {
+            display: flex;
+            justify-content: center;
+            background: #1e1e2a;
+            border-radius: 28px;
+            overflow: auto;
+            border: 1px solid #e2e8f0;
+            touch-action: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        canvas {
+            display: block;
+            background: #1e1e2a;
+            max-width: 100%;
+            height: auto;
+            border-radius: 24px;
+            touch-action: none;
+        }
+        .right-controls {
+            flex: 1;
+            min-width: 200px;
+            background: #f9fafc;
+            border-radius: 28px;
+            padding: 16px 12px;
+            border: 1px solid #eef2f6;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .control-group {
+            background: white;
+            border-radius: 24px;
+            padding: 12px;
+            border: 1px solid #e9edf2;
+        }
+        .control-group-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c6e9e;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            border-left: 3px solid #2c6e9e;
+            padding-left: 8px;
+        }
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .control-buttons-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .right-controls button, .right-controls .mode-btn {
+            min-height: 48px;
+            padding: 0 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #ffffff;
+            border: 1px solid #dce3ec;
+            cursor: pointer;
+            transition: 0.15s;
+            color: #1e3a5f;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+        .right-controls button.primary {
+            background: #2c6e9e;
+            border-color: #1f5a83;
+            color: white;
+        }
+        .right-controls button.primary-active {
+            background: #1a4f73;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 1px #ffc107;
+            color: white;
+        }
+        .right-controls button.danger {
+            background: #fff5f5;
+            border-color: #f0cdcd;
+            color: #c23d3d;
+        }
+        .right-controls button.small-icon {
+            font-size: 18px;
+            padding: 0 12px;
+        }
+        .info-panel {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .roi-list {
+            flex: 1.2;
+            background: #fbfdff;
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid #eef2f8;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .results-table {
+            flex: 2;
+            background: #fbfdff;
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid #eef2f8;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid #edf2f7;
+        }
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafd;
+            font-weight: 600;
+            color: #1e4663;
+        }
+        .roi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 60px;
+            cursor: pointer;
+            border: 1px solid #e9edf2;
+            font-size: 13px;
+        }
+        .roi-item.selected {
+            border-color: #2c6e9e;
+            background: #eef6fc;
+            font-weight: 500;
+        }
+        .badge {
+            background: #e9f0f5;
+            color: #2c6e9e;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+        .status {
+            font-size: 12px;
+            color: #2c6e9e;
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #eef2f8;
+            background: #f9fbfe;
+            border-radius: 28px;
+            padding: 10px 14px;
+        }
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6a7f9b;
+            border-top: 1px solid #eef2f8;
+            padding-top: 18px;
+            font-style: italic;
+        }
+        @media (max-width: 900px) {
+            .container { padding: 16px; }
+            .main-layout { flex-direction: column; align-items: stretch; }
+            .right-controls { flex-direction: row; flex-wrap: wrap; }
+            .control-group { flex: 1; min-width: 160px; }
+            .control-buttons { flex-direction: row; flex-wrap: wrap; }
+            .right-controls button { width: auto; flex: 1; }
+            .top-toolbar { margin-top: 12px; margin-bottom: 20px; }
+        }
+        @media (max-width: 600px) {
+            .tool-group { width: 100%; justify-content: space-between; }
+            .right-controls .control-buttons-row { flex-direction: column; }
+        }
+        .zoom-group button, .rotate-group button { font-weight: 600; }
+
+        /* ========== 验证层样式 (毛玻璃覆盖主程序，确保主程序初始化但被遮挡) ========== */
+        .verification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 25, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .verification-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .verify-card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 48px;
+            padding: 32px 28px 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            animation: cardFloat 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        @keyframes cardFloat {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        /* 圆形头像容器 */
+        .avatar-circle {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 18px;
+            background: linear-gradient(145deg, #1a4c6e, #2c6e9e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 25px -8px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.3);
+            transition: 0.2s;
+        }
+        .avatar-circle svg {
+            width: 70px;
+            height: 70px;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+        }
+        .verify-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a4c6e, #3a8bc0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        .verify-sub {
+            font-size: 0.85rem;
+            color: #4a627a;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: inline-block;
+            padding-bottom: 4px;
+        }
+        .input-group {
+            margin: 20px 0 16px;
+            text-align: left;
+        }
+        .input-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e4663;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .password-wrapper {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 60px;
+            border: 1px solid #dce3ec;
+            transition: 0.2s;
+        }
+        .password-wrapper:focus-within {
+            border-color: #2c6e9e;
+            box-shadow: 0 0 0 2px rgba(44,110,158,0.2);
+        }
+        .password-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 14px 18px;
+            font-size: 1rem;
+            outline: none;
+            font-weight: 500;
+            color: #0a2540;
+        }
+        .toggle-pwd {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0 16px;
+            font-size: 1.2rem;
+            color: #5f7f9e;
+        }
+        .unlock-btn {
+            background: linear-gradient(95deg, #2c6e9e, #1f5a83);
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .unlock-btn:hover {
+            transform: scale(0.98);
+            background: linear-gradient(95deg, #1f5a83, #154a6b);
+        }
+        .error-msg {
+            color: #d14545;
+            font-size: 0.75rem;
+            margin-top: 12px;
+            background: rgba(209,69,69,0.1);
+            padding: 8px;
+            border-radius: 40px;
+            display: inline-block;
+            width: 100%;
+        }
+        .verify-footer {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #7c8ea0;
+        }
+    </style>
+
+    <!-- ========== 启动界面 (Splash Screen) 样式 ========== -->
+    <style>
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 40% 40%, #12161f, #030407);
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.9s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            opacity: 1;
+            pointer-events: auto;
+            overflow: hidden;
+        }
+        .splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .color-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .color-orb {
+            position: absolute;
+            width: 70vmax;
+            height: 70vmax;
+            border-radius: 50%;
+            filter: blur(70px);
+            animation: floatOrb 24s infinite alternate ease-in-out;
+        }
+        .color-orb-1 {
+            top: -30%;
+            left: -20%;
+            background: radial-gradient(circle, rgba(0, 180, 255, 0.12), rgba(100, 0, 200, 0.05));
+            animation-duration: 26s;
+        }
+        .color-orb-2 {
+            bottom: -40%;
+            right: -25%;
+            width: 80vmax;
+            background: radial-gradient(circle, rgba(200, 100, 255, 0.1), rgba(0, 80, 120, 0));
+            animation-duration: 30s;
+            animation-delay: -3s;
+        }
+        .color-orb-3 {
+            top: 40%;
+            left: 30%;
+            width: 50vmax;
+            background: radial-gradient(circle, rgba(0, 230, 200, 0.08), transparent);
+            animation-duration: 20s;
+            animation-delay: -6s;
+        }
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            100% { transform: translate(4%, 6%) scale(1.08); opacity: 0.7; }
+        }
+        .noise-texture {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.08"/></svg>');
+            background-repeat: repeat;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .scan-rainbow {
+            position: absolute;
+            width: 120%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00e0ff, #7c3aed, #f59e0b, #00e0ff, transparent);
+            top: 30%;
+            left: -10%;
+            filter: blur(2px);
+            animation: scanColorMove 5.5s infinite ease-in-out;
+            opacity: 0.6;
+        }
+        @keyframes scanColorMove {
+            0% { top: 20%; opacity: 0; transform: translateX(-10%); }
+            40% { opacity: 0.8; }
+            80% { top: 70%; opacity: 0.6; }
+            100% { top: 20%; opacity: 0; transform: translateX(10%); }
+        }
+        .hero-gray {
+            position: relative;
+            z-index: 20;
+            text-align: center;
+            padding: 24px;
+            max-width: 90vw;
+            animation: subtleGlide 3.2s infinite alternate ease-in-out;
+        }
+        @keyframes subtleGlide {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-5px); }
+        }
+        .main-title {
+            font-size: clamp(44px, 9vw, 78px);
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            background: linear-gradient(135deg, #FFFFFF, #B0C4FF, #7A9DFF, #C084FC);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px rgba(100, 150, 255, 0.4);
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+        .sub-main {
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            background: linear-gradient(120deg, #E0E8FF, #80B3FF, #5FD0FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 36px;
+        }
+        .grayscale-text {
+            font-size: clamp(26px, 6vw, 44px);
+            font-weight: 700;
+            letter-spacing: 3px;
+            background: linear-gradient(125deg, #FFFFFF, #C7D9FF, #8B5CF6, #00D4FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+        }
+        .gray-underline {
+            width: 68%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, #a855f7, #00e6c3, #f59e0b, transparent);
+            margin: 16px auto 0;
+            border-radius: 4px;
+            animation: lineBreathColor 2.8s infinite ease-in-out;
+        }
+        @keyframes lineBreathColor {
+            0% { width: 30%; opacity: 0.3; }
+            50% { width: 85%; opacity: 1; }
+            100% { width: 30%; opacity: 0.3; }
+        }
+        .dot-sep {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin: 36px 0 18px;
+        }
+        .gray-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            animation: dotColorPulse 2s infinite alternate;
+        }
+        .gray-dot:nth-child(1) { background: #3b82f6; }
+        .gray-dot:nth-child(2) { background: #a855f7; animation-delay: 0.3s; }
+        .gray-dot:nth-child(3) { background: #00e6c3; animation-delay: 0.6s; }
+        @keyframes dotColorPulse {
+            0% { transform: scale(0.7); opacity: 0.4; }
+            100% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 12px currentColor; }
+        }
+        .loader-gray {
+            position: absolute;
+            bottom: 12%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            z-index: 20;
+        }
+        .loader-gray span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: loaderColorAnim 1.4s infinite;
+        }
+        .loader-gray span:nth-child(1) { background: #3b82f6; animation-delay: 0.1s; }
+        .loader-gray span:nth-child(2) { background: #a855f7; animation-delay: 0.4s; }
+        .loader-gray span:nth-child(3) { background: #00e6c3; animation-delay: 0.7s; }
+        @keyframes loaderColorAnim {
+            0%, 100% { opacity: 0.2; transform: scale(0.7); }
+            50% { opacity: 1; transform: scale(1.3); box-shadow: 0 0 10px currentColor; }
+        }
+        .gray-credit {
+            position: absolute;
+            bottom: 5%;
+            font-size: 12px;
+            z-index: 20;
+            text-align: center;
+            width: 100%;
+            background: linear-gradient(90deg, #a0b4d0, #c0d0e8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 500;
+        }
+        @media (max-width: 550px) {
+            .grayscale-text { letter-spacing: 1.8px; }
+            .loader-gray { bottom: 10%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== 启动界面 ========== -->
+<div class="splash-screen" id="splashScreen">
+    <div class="color-bg">
+        <div class="noise-texture"></div>
+        <div class="color-orb color-orb-1"></div>
+        <div class="color-orb color-orb-2"></div>
+        <div class="color-orb color-orb-3"></div>
+        <div class="scan-rainbow"></div>
+    </div>
+    <div class="hero-gray">
+        <div class="main-title">INFINITE</div>
+        <div class="sub-main">POSSIBILITIES</div>
+        <div class="dot-sep"><div class="gray-dot"></div><div class="gray-dot"></div><div class="gray-dot"></div></div>
+        <div class="grayscale-text">GRAYSCALE ANALYSIS</div>
+        <div class="gray-underline"></div>
+    </div>
+    <div class="loader-gray"><span></span><span></span><span></span></div>
+    <div class="gray-credit">灰度值分析平台 &nbsp;|&nbsp; 开发者：沙兴良</div>
+</div>
+
+<!-- ========== 验证层 (密码保护) ========== -->
+<div class="verification-overlay" id="verificationOverlay">
+    <div class="verify-card">
+        <div class="avatar-circle">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" stroke="white" stroke-width="2" fill="#1f5a83" />
+                <path d="M32 50 L44 62 L68 38" stroke="#00e6c3" stroke-width="4" stroke-linecap="round" fill="none"/>
+                <circle cx="50" cy="50" r="12" fill="white" stroke="#2c6e9e" stroke-width="2"/>
+                <path d="M50 44 L50 56 M44 50 L56 50" stroke="#2c6e9e" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="4" fill="#00e6c3"/>
+            </svg>
+        </div>
+        <div class="verify-title">安全验证</div>
+        <div class="verify-sub">授权访问 · 灰度定量平台</div>
+        <div class="input-group">
+            <label>🔐 平台访问密码</label>
+            <div class="password-wrapper">
+                <input type="password" id="accessPassword" placeholder="请输入密码" autocomplete="off">
+                <button type="button" class="toggle-pwd" id="togglePwdBtn">👁️</button>
+            </div>
+        </div>
+        <button class="unlock-btn" id="unlockBtn">解锁并进入平台 🔓</button>
+        <div id="pwdErrorMsg" class="error-msg" style="display: none;">❌ 密码错误，请重试</div>
+        <div class="verify-footer">灰度值定量分析 · 专业科研版</div>
+    </div>
+</div>
+
+<!-- ========== 主程序容器 (原有完整内容，未改动) ========== -->
+<div class="container" id="mainAppContainer">
+    <div class="header">
+        <div class="title-section">
+            <h1>灰度值定量分析平台</h1>
+            <div class="subtitle">手动选择分析区域 · 背景扣除 · 多区域定量</div>
+        </div>
+        <div class="dev-info">开发者：沙兴良</div>
+    </div>
+    <div class="top-toolbar">
+        <div class="tool-group">
+            <input type="file" id="uploadImage" accept="image/jpeg,image/png,image/jpg" style="display:none">
+            <button id="loadBtn">📂 打开图片</button>
+            <button id="resetViewBtn">🖼️ 适应窗口</button>
+        </div>
+        <div class="tool-group">
+            <button id="grayscaleBtn">⚫ 灰度化</button>
+            <button id="autoContrastBtn">✨ 自动增强</button>
+            <button id="invertBtn">🔄 反色</button>
+        </div>
+        <div class="slider-group tool-group">
+            <label>🎚️ 对比度</label>
+            <input type="range" id="contrastSlider" min="0.5" max="2.5" step="0.01" value="1.0">
+            <span id="contrastVal">1.00</span>
+            <button id="resetAdjustBtn">重置</button>
+        </div>
+        <div class="tool-group">
+            <span>背景宽度:</span>
+            <input type="number" id="bgWidth" value="3" min="1" max="20" style="width:70px">
+            <select id="bgDirection">
+                <option value="all">全周</option>
+                <option value="topbottom">上下</option>
+                <option value="sides">左右</option>
+            </select>
+            <select id="bgMethod">
+                <option value="median">中位数</option>
+                <option value="mean">均值</option>
+            </select>
+            <button id="quantifyBtn" style="background:#2c6e9e; color:white;">📊 定量分析</button>
+            <button id="exportCsvBtn" style="background:#2f7d5c; color:white;">📎 导出CSV</button>
+        </div>
+        <div class="tool-group">
+            <button id="deleteSelectedBtn" class="danger">🗑 删除选中</button>
+            <button id="clearAllRoiBtn">🗑️ 清除所有ROI</button>
+        </div>
+    </div>
+    <div class="main-layout">
+        <div class="canvas-area-wrapper">
+            <div class="canvas-area">
+                <canvas id="mainCanvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+        <div class="right-controls">
+            <div class="control-group"><div class="control-group-title">选择模式</div>
+                <div class="control-buttons">
+                    <button id="rectModeBtn" class="primary">⬚ 矩形模式</button>
+                    <button id="brushModeBtn">✎ 画笔模式</button>
+                    <button id="fixedModeBtn">🔒 固定模式(长按复制)</button>
+                    <button id="panBtn">✋ 平移模式</button>
+                </div>
+            </div>
+            <div class="control-group"><div class="control-group-title">视图调整</div>
+                <div class="control-buttons">
+                    <div class="control-buttons-row"><button id="zoomOutBtn" class="small-icon">− 缩小</button><button id="zoomInBtn" class="small-icon">放大 +</button></div>
+                    <div class="control-buttons-row"><button id="rotateLeftBtn" class="small-icon">↺ 左旋</button><button id="rotateRightBtn" class="small-icon">↻ 右旋</button></div>
+                </div>
+            </div>
+            <div class="control-group"><div class="control-group-title">操作提示</div>
+                <div style="font-size: 11px; color: #5b7a9a; line-height: 1.4; padding: 4px;">
+                    • 矩形模式: 拖拽绘制<br>• 画笔模式: 按下移动画线，松手成多边形<br>• 固定模式: 单击选中ROI，长按拖拽复制<br>• 平移模式: 单指拖动画面
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="info-panel">
+        <div class="roi-list"><strong>📌 分析区域列表 (单击选中)</strong><div id="roiListContainer" style="margin-top:12px;"></div><div class="status" id="statusMsg">✅ 就绪 | 矩形模式: 拖拽绘制矩形区域</div></div>
+        <div class="results-table"><strong>📈 定量结果 (Signal = 背景扣除后净信号总值)</strong><div style="overflow-x:auto; margin-top:10px;"><table id="resultTable"><thead><tr><th>ROI</th><th>Signal</th><th>Total</th><th>Area(px²)</th><th>Mean</th><th>Background</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+    <div class="footer">本平台仅用于科研辅助计算，实际结果请结合专业判断</div>
+</div>
+
+<script>
+    // ========== 主程序原有脚本 (完整保留，未做任何修改) ==========
+    (function(){
+        let canvas = document.getElementById('mainCanvas');
+        let ctx = canvas.getContext('2d');
+        let baseImageData = null, currentImageData = null, displayImageData = null;
+        let imgWidth = 0, imgHeight = 0;
+        let view = { x: 0, y: 0, scale: 1.0 };
+        let isPanning = false, panStart = { x: 0, y: 0 };
+        let rois = [], nextId = 1, selectedRoiId = null, mode = 'rect', lastResults = [], contrast = 1.0;
+        let isDrawingRect = false, rectStart = { x:0, y:0 };
+        let isBrushDrawing = false, brushPoints = [], brushTempPoints = [];
+        let longPressTimer = null, isLongPressActive = false, clonedSourceRoi = null, clonedTempRoi = null, dragOffsetX = 0, dragOffsetY = 0, pendingLongPressRoi = null, longPressPrevent = false;
+        function isPointInRect(px, py, roi) { return (px >= roi.x && px <= roi.x + roi.w && py >= roi.y && py <= roi.y + roi.h); }
+        function isPointInPolygon(px, py, vertices) { let inside=false; for (let i=0,j=vertices.length-1;i<vertices.length;j=i++) { let xi=vertices[i].x,yi=vertices[i].y,xj=vertices[j].x,yj=vertices[j].y; let intersect=((yi>py)!=(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi); if(intersect) inside=!inside; } return inside; }
+        function findRoiAtImagePoint(px,py){ for(let roi of rois){ if(roi.type==='rect' && isPointInRect(px,py,roi)) return roi; if(roi.type==='polygon' && isPointInPolygon(px,py,roi.points)) return roi; } return null; }
+        function cloneRoi(roi){ if(roi.type==='rect') return { id:null, type:'rect', x:roi.x, y:roi.y, w:roi.w, h:roi.h }; else return { id:null, type:'polygon', points:roi.points.map(p=>({x:p.x,y:p.y})) }; }
+        function cancelLongPress(){ if(longPressTimer) clearTimeout(longPressTimer); if(isLongPressActive){ isLongPressActive=false; clonedSourceRoi=null; clonedTempRoi=null; pendingLongPressRoi=null; redrawCanvas(); } longPressPrevent=false; }
+        function startLongPressCopy(roi,startCanvasCoord){ if(!roi) return; let imgCoord=canvasToImage(startCanvasCoord.x,startCanvasCoord.y); if(roi.type==='rect'){ dragOffsetX=imgCoord.x-roi.x; dragOffsetY=imgCoord.y-roi.y; }else{ let first=roi.points[0]; dragOffsetX=imgCoord.x-first.x; dragOffsetY=imgCoord.y-first.y; } clonedSourceRoi=roi; clonedTempRoi=cloneRoi(roi); isLongPressActive=true; longPressPrevent=true; updateStatus(`长按复制模式: 拖动到新位置释放，生成相同形状的ROI`); redrawCanvas(); }
+        function updateClonedRoiPosition(canvasCoord){ if(!clonedTempRoi) return; let imgCoord=canvasToImage(canvasCoord.x,canvasCoord.y); if(clonedTempRoi.type==='rect'){ clonedTempRoi.x=imgCoord.x-dragOffsetX; clonedTempRoi.y=imgCoord.y-dragOffsetY; }else{ let origFirst=clonedSourceRoi.points[0]; let dx=imgCoord.x-origFirst.x-dragOffsetX; let dy=imgCoord.y-origFirst.y-dragOffsetY; for(let i=0;i<clonedTempRoi.points.length;i++){ let origPt=clonedSourceRoi.points[i]; clonedTempRoi.points[i]={x:origPt.x+dx, y:origPt.y+dy}; } } redrawCanvas(); }
+        function commitCopyRoi(){ if(clonedTempRoi && isLongPressActive){ let newRoi; if(clonedTempRoi.type==='rect'){ newRoi={id:nextId++,type:'rect',x:Math.round(clonedTempRoi.x),y:Math.round(clonedTempRoi.y),w:Math.round(clonedTempRoi.w),h:Math.round(clonedTempRoi.h)}; }else{ let pts=clonedTempRoi.points.map(p=>({x:Math.round(p.x),y:Math.round(p.y)})); newRoi={id:nextId++,type:'polygon',points:pts}; } rois.push(newRoi); selectedRoiId=newRoi.id; updateRoiList(); clearResultTable(); lastResults=[]; updateStatus(`已复制 ROI #${newRoi.id}`); } cancelLongPress(); redrawCanvas(); }
+        function imageToCanvas(x,y){ return { x: (x * view.scale) + view.x, y: (y * view.scale) + view.y }; }
+        function canvasToImage(px,py){ let ix=(px-view.x)/view.scale, iy=(py-view.y)/view.scale; return { x: Math.max(0, Math.min(imgWidth, ix)), y: Math.max(0, Math.min(imgHeight, iy)) }; }
+        function drawPolygon(points,isSelected,isTemporary=false){ if(!points||points.length<2) return; ctx.save(); if(isTemporary){ ctx.setLineDash([6,8]); ctx.strokeStyle='#ffaa33'; ctx.lineWidth=4; ctx.fillStyle='rgba(255,170,51,0.1)'; }else{ ctx.setLineDash([]); ctx.strokeStyle=isSelected?'#f0a500':'#3aa8c1'; ctx.lineWidth=Math.max(2,2/view.scale); } ctx.beginPath(); let first=imageToCanvas(points[0].x,points[0].y); ctx.moveTo(first.x,first.y); for(let i=1;i<points.length;i++){ let p=imageToCanvas(points[i].x,points[i].y); ctx.lineTo(p.x,p.y); } ctx.closePath(); if(isTemporary) ctx.fill(); ctx.stroke(); for(let p of points){ let cp=imageToCanvas(p.x,p.y); ctx.beginPath(); ctx.arc(cp.x,cp.y,5/view.scale,0,2*Math.PI); ctx.fillStyle=isTemporary?'#ffaa33':'#ffffff'; ctx.fill(); ctx.fillStyle='#000000'; ctx.arc(cp.x,cp.y,2/view.scale,0,2*Math.PI); ctx.fill(); } ctx.restore(); }
+        function redrawCanvas(){ if(!displayImageData) return; let tempCanvas=document.createElement('canvas'); tempCanvas.width=imgWidth; tempCanvas.height=imgHeight; let tempCtx=tempCanvas.getContext('2d'); tempCtx.putImageData(displayImageData,0,0); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save(); ctx.translate(view.x,view.y); ctx.scale(view.scale,view.scale); ctx.drawImage(tempCanvas,0,0,imgWidth,imgHeight); ctx.restore(); for(let roi of rois){ if(roi.type==='rect'){ let tl=imageToCanvas(roi.x,roi.y); let w=roi.w*view.scale, h=roi.h*view.scale; ctx.save(); ctx.beginPath(); ctx.rect(tl.x,tl.y,w,h); ctx.strokeStyle=(selectedRoiId===roi.id)?'#f0a500':'#3aa8c1'; ctx.lineWidth=Math.max(2,2/view.scale); ctx.stroke(); ctx.font=`${Math.max(12,14*Math.min(1.5,view.scale))}px "Inter", monospace`; ctx.fillStyle='#ffffff'; ctx.fillText(`#${roi.id}`,tl.x+4,tl.y+18); ctx.restore(); }else if(roi.type==='polygon'){ drawPolygon(roi.points,selectedRoiId===roi.id); if(roi.points.length){ let p=imageToCanvas(roi.points[0].x,roi.points[0].y); ctx.fillStyle='#ffffff'; ctx.font=`${Math.max(12,14*view.scale)}px "Inter"`; ctx.fillText(`#${roi.id}`,p.x+5,p.y-5); } } } if(isLongPressActive&&clonedTempRoi){ if(clonedTempRoi.type==='rect'){ let tl=imageToCanvas(clonedTempRoi.x,clonedTempRoi.y); let w=clonedTempRoi.w*view.scale, h=clonedTempRoi.h*view.scale; ctx.save(); ctx.beginPath(); ctx.rect(tl.x,tl.y,w,h); ctx.strokeStyle='#ffaa33'; ctx.lineWidth=4; ctx.setLineDash([8,8]); ctx.stroke(); ctx.fillStyle='rgba(255,170,51,0.15)'; ctx.fill(); ctx.restore(); }else drawPolygon(clonedTempRoi.points,false,true); } if(mode==='brush'&&isBrushDrawing&&brushTempPoints.length>1) drawPolygon(brushTempPoints,false,true); }
+        function applyContrast(){ if(!currentImageData) return; let src=currentImageData.data; let dstData=new ImageData(imgWidth,imgHeight); let dst=dstData.data; for(let i=0;i<src.length;i+=4){ let v=src[i]; let newVal=128+(v-128)*contrast; newVal=Math.min(255,Math.max(0,newVal)); dst[i]=dst[i+1]=dst[i+2]=newVal; dst[i+3]=255; } displayImageData=dstData; redrawCanvas(); }
+        function autoEnhanceContrast(){ if(!currentImageData) return; let data=currentImageData.data; let hist=new Array(256).fill(0); for(let i=0;i<data.length;i+=4) hist[data[i]]++; let total=data.length/4,cum=0,limit=total*0.35; let low=0,high=255; for(let i=0;i<256;i++){ cum+=hist[i]; if(cum>=limit){low=i;break;} } cum=0; for(let i=255;i>=0;i--){ cum+=hist[i]; if(cum>=limit){high=i;break;} } if(high<=low) return; let k1=(0-128)/(low-128), k2=(255-128)/(high-128); let newCont=(k1+k2)/2; contrast=Math.min(2.5,Math.max(0.5,newCont)); document.getElementById('contrastSlider').value=contrast; document.getElementById('contrastVal').innerText=contrast.toFixed(2); applyContrast(); updateStatus("自动增强对比度完成"); }
+        function invert(){ if(!displayImageData) return; let data=displayImageData.data; for(let i=0;i<data.length;i+=4){ let inv=255-data[i]; data[i]=data[i+1]=data[i+2]=inv; } redrawCanvas(); updateStatus("反色完成"); }
+        function rotateImage(angle){ if(!baseImageData) return; let srcCanvas=document.createElement('canvas'); srcCanvas.width=imgWidth; srcCanvas.height=imgHeight; srcCanvas.getContext('2d').putImageData(baseImageData,0,0); let newW=(angle%180===0)?imgWidth:imgHeight; let newH=(angle%180===0)?imgHeight:imgWidth; let destCanvas=document.createElement('canvas'); destCanvas.width=newW; destCanvas.height=newH; let destCtx=destCanvas.getContext('2d'); destCtx.save(); destCtx.translate(newW/2,newH/2); destCtx.rotate(angle*Math.PI/180); destCtx.drawImage(srcCanvas,-imgWidth/2,-imgHeight/2); destCtx.restore(); let rotated=destCtx.getImageData(0,0,newW,newH); let gray=new ImageData(newW,newH); for(let i=0;i<rotated.data.length;i+=4){ let g=0.299*rotated.data[i]+0.587*rotated.data[i+1]+0.114*rotated.data[i+2]; gray.data[i]=gray.data[i+1]=gray.data[i+2]=g; gray.data[i+3]=255; } imgWidth=newW; imgHeight=newH; baseImageData=gray; currentImageData=baseImageData; contrast=1.0; document.getElementById('contrastSlider').value=1; applyContrast(); rois=[]; selectedRoiId=null; nextId=1; updateRoiList(); clearResultTable(); lastResults=[]; resetView(); updateStatus(`旋转 ${angle}° 完成，ROI已清空`); }
+        function resetView(){ if(!imgWidth) return; let sx=canvas.width/imgWidth, sy=canvas.height/imgHeight; view.scale=Math.min(sx,sy); view.x=(canvas.width-imgWidth*view.scale)/2; view.y=(canvas.height-imgHeight*view.scale)/2; redrawCanvas(); }
+        function zoomAtCenter(delta){ if(!imgWidth) return; let cx=canvas.width/2, cy=canvas.height/2; let before=canvasToImage(cx,cy); let newScale=Math.min(8,Math.max(0.3,view.scale*delta)); view.scale=newScale; let after=canvasToImage(cx,cy); view.x+=(after.x-before.x)*view.scale; view.y+=(after.y-before.y)*view.scale; redrawCanvas(); }
+        function addRectRoi(x,y,w,h){ if(w<5||h<5) return; let roi={id:nextId++,type:'rect',x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h)}; rois.push(roi); selectedRoiId=roi.id; updateRoiList(); redrawCanvas(); clearResultTable(); lastResults=[]; updateStatus(`添加矩形 #${roi.id}`); }
+        function addPolygonRoi(points){ if(points.length<3) return; let pts=points.map(p=>({x:Math.round(p.x),y:Math.round(p.y)})); let roi={id:nextId++,type:'polygon',points:pts}; rois.push(roi); selectedRoiId=roi.id; updateRoiList(); redrawCanvas(); clearResultTable(); lastResults=[]; updateStatus(`添加多边形 #${roi.id}`); }
+        function updateRoiList(){ let cont=document.getElementById('roiListContainer'); cont.innerHTML=''; for(let roi of rois){ let div=document.createElement('div'); div.className='roi-item'+(selectedRoiId===roi.id?' selected':''); let info=(roi.type==='rect')?`矩形 ${roi.w}×${roi.h}`:`多边形 ${roi.points.length}顶点`; div.innerHTML=`<span><strong>#${roi.id}</strong> (${info})</span><span class="badge">${roi.type==='rect'?roi.w*roi.h:'~'+roi.points.length} px²</span>`; div.onclick=(function(id){ return ()=>selectRoi(id); })(roi.id); cont.appendChild(div); } if(rois.length===0) cont.innerHTML='<div style="color:#6b8aaa; text-align:center; padding:10px;">暂无分析区域，使用矩形/画笔模式创建</div>'; }
+        function selectRoi(id){ selectedRoiId=id; updateRoiList(); redrawCanvas(); updateStatus(`已选中 ROI #${id}`); }
+        function deleteSelected(){ if(selectedRoiId!==null){ rois=rois.filter(r=>r.id!==selectedRoiId); selectedRoiId=null; updateRoiList(); redrawCanvas(); clearResultTable(); lastResults=[]; updateStatus("已删除选中ROI"); }else updateStatus("没有选中的ROI"); }
+        function clearAllRoi(){ rois=[]; selectedRoiId=null; updateRoiList(); redrawCanvas(); clearResultTable(); lastResults=[]; updateStatus("清除所有ROI"); }
+        function clearResultTable(){ let tbody=document.querySelector('#resultTable tbody'); tbody.innerHTML='<tr><td colspan="6" style="text-align:center;">— 请运行定量分析 —</td></tr>'; lastResults=[]; }
+        function quantify(){ if(!displayImageData||rois.length===0){ updateStatus("请先加载图像并创建ROI"); return; } let bgWidth=parseInt(document.getElementById('bgWidth').value); let direction=document.getElementById('bgDirection').value; let method=document.getElementById('bgMethod').value; function getRectPixels(x,y,w,h){ let vals=[]; let x1=Math.max(0,Math.floor(x)),y1=Math.max(0,Math.floor(y)),x2=Math.min(imgWidth,Math.floor(x+w)),y2=Math.min(imgHeight,Math.floor(y+h)); for(let py=y1;py<y2;py++) for(let px=x1;px<x2;px++) vals.push(displayImageData.data[(py*imgWidth+px)*4]); return vals; } function getPolygonPixels(points){ let minX=Math.floor(Math.min(...points.map(p=>p.x))),maxX=Math.ceil(Math.max(...points.map(p=>p.x))),minY=Math.floor(Math.min(...points.map(p=>p.y))),maxY=Math.ceil(Math.max(...points.map(p=>p.y))),vals=[]; for(let py=minY;py<=maxY;py++) for(let px=minX;px<=maxX;px++) if(px>=0&&px<imgWidth&&py>=0&&py<imgHeight&&isPointInPolygon(px,py,points)) vals.push(displayImageData.data[(py*imgWidth+px)*4]); return vals; } function getBackground(roi,bw,dir){ let rx,ry,rw,rh; if(roi.type==='rect'){ rx=roi.x; ry=roi.y; rw=roi.w; rh=roi.h; }else{ let xs=roi.points.map(p=>p.x),ys=roi.points.map(p=>p.y); rx=Math.min(...xs); ry=Math.min(...ys); rw=Math.max(...xs)-rx; rh=Math.max(...ys)-ry; } let w=imgWidth,h=imgHeight,data=displayImageData.data,expand=bw,vals=[]; if(dir==='all'){ let left=Math.max(0,rx-expand),right=Math.min(w,rx+rw+expand),top=Math.max(0,ry-expand),bottom=Math.min(h,ry+rh+expand); for(let py=top;py<bottom;py++) for(let px=left;px<right;px++) if(!(px>=rx&&px<rx+rw&&py>=ry&&py<ry+rh)) vals.push(data[(py*w+px)*4]); } else if(dir==='topbottom'){ let topTop=Math.max(0,ry-expand),topBottom=ry,bottomTop=ry+rh,bottomBottom=Math.min(h,ry+rh+expand); for(let py=topTop;py<topBottom;py++) for(let px=Math.max(0,rx);px<Math.min(w,rx+rw);px++) vals.push(data[(py*w+px)*4]); for(let py=bottomTop;py<bottomBottom;py++) for(let px=Math.max(0,rx);px<Math.min(w,rx+rw);px++) vals.push(data[(py*w+px)*4]); } else if(dir==='sides'){ let leftLeft=Math.max(0,rx-expand),leftRight=rx,rightLeft=rx+rw,rightRight=Math.min(w,rx+rw+expand); for(let py=Math.max(0,ry);py<Math.min(h,ry+rh);py++){ for(let px=leftLeft;px<leftRight;px++) vals.push(data[(py*w+px)*4]); for(let px=rightLeft;px<rightRight;px++) vals.push(data[(py*w+px)*4]); } } return vals; } let results=[]; for(let roi of rois){ let roiPixels=(roi.type==='rect')?getRectPixels(roi.x,roi.y,roi.w,roi.h):getPolygonPixels(roi.points); if(roiPixels.length===0) continue; let area=roiPixels.length, sum=roiPixels.reduce((a,b)=>a+b,0), mean=sum/area; let bgPixels=getBackground(roi,bgWidth,direction); let bgValue=0; if(bgPixels.length>0){ if(method==='median'){ let sorted=[...bgPixels].sort((a,b)=>a-b), mid=Math.floor(sorted.length/2); bgValue=sorted.length%2===0?(sorted[mid-1]+sorted[mid])/2:sorted[mid]; }else bgValue=bgPixels.reduce((a,b)=>a+b,0)/bgPixels.length; } let signal=area*(mean-bgValue); results.push({id:roi.id,type:roi.type,signal:signal,total:sum,area:area,mean:mean,background:bgValue}); } lastResults=results; let tbody=document.querySelector('#resultTable tbody'); tbody.innerHTML=''; for(let r of results){ let row=tbody.insertRow(); row.insertCell(0).innerText=`#${r.id} (${r.type==='rect'?'矩形':'多边形'})`; row.insertCell(1).innerText=r.signal.toFixed(1); row.insertCell(2).innerText=r.total.toFixed(1); row.insertCell(3).innerText=r.area; row.insertCell(4).innerText=r.mean.toFixed(2); row.insertCell(5).innerText=r.background.toFixed(2); } updateStatus("定量分析完成"); }
+        function exportToCSV(){ if(lastResults.length===0){ updateStatus("无数据，请先定量分析"); return; } let headers=["ROI_ID","Type","Signal","Total","Area","Mean","Background"]; let rows=lastResults.map(r=>[r.id,r.type,r.signal.toFixed(2),r.total.toFixed(2),r.area,r.mean.toFixed(4),r.background.toFixed(4)]); let csv=headers.join(",")+"\n"+rows.map(r=>r.join(",")).join("\n"); let blob=new Blob(["\uFEFF"+csv],{type:"text/csv"}); let a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="灰度值定量分析.csv"; a.click(); URL.revokeObjectURL(a.href); updateStatus("CSV导出成功"); }
+        function getCanvasCoord(e,isTouch){ let rect=canvas.getBoundingClientRect(); let cx,cy; if(isTouch){ let t=e.touches[0]; if(!t) return null; cx=t.clientX; cy=t.clientY; }else{ cx=e.clientX; cy=e.clientY; } let sx=canvas.width/rect.width, sy=canvas.height/rect.height; let x=(cx-rect.left)*sx, y=(cy-rect.top)*sy; return { x: Math.max(0,Math.min(canvas.width,x)), y: Math.max(0,Math.min(canvas.height,y)) }; }
+        function onPointerDown(e,isTouch){ e.preventDefault(); cancelLongPress(); let coord=getCanvasCoord(e,isTouch); if(!coord) return; let imgCoord=canvasToImage(coord.x,coord.y); if(mode==='rect'){ isDrawingRect=true; rectStart={x:imgCoord.x,y:imgCoord.y}; }else if(mode==='brush'){ isBrushDrawing=true; brushPoints=[{x:imgCoord.x,y:imgCoord.y}]; brushTempPoints=[...brushPoints]; redrawCanvas(); updateStatus("画笔: 移动手指/鼠标绘制轨迹"); }else if(mode==='fixed'){ let hit=findRoiAtImagePoint(imgCoord.x,imgCoord.y); if(hit){ selectedRoiId=hit.id; updateRoiList(); redrawCanvas(); pendingLongPressRoi=hit; longPressTimer=setTimeout(()=>{ startLongPressCopy(pendingLongPressRoi,coord); pendingLongPressRoi=null; },500); }else{ selectedRoiId=null; updateRoiList(); redrawCanvas(); } }else if(mode==='pan'){ isPanning=true; panStart=coord; } }
+        function onPointerMove(e,isTouch){ let coord=getCanvasCoord(e,isTouch); if(!coord) return; if(isLongPressActive&&clonedTempRoi){ updateClonedRoiPosition(coord); e.preventDefault(); return; } if(mode==='rect'&&isDrawingRect){ let curImg=canvasToImage(coord.x,coord.y); redrawCanvas(); let startPt=imageToCanvas(rectStart.x,rectStart.y); let endPt=imageToCanvas(curImg.x,curImg.y); ctx.save(); ctx.beginPath(); ctx.rect(startPt.x,startPt.y,endPt.x-startPt.x,endPt.y-startPt.y); ctx.strokeStyle='#ffaa33'; ctx.lineWidth=3; ctx.setLineDash([6,8]); ctx.stroke(); ctx.restore(); }else if(mode==='brush'&&isBrushDrawing){ let curImg=canvasToImage(coord.x,coord.y); let last=brushPoints[brushPoints.length-1]; let dist=Math.hypot(curImg.x-last.x,curImg.y-last.y); if(dist>3){ brushPoints.push({x:curImg.x,y:curImg.y}); brushTempPoints=[...brushPoints]; redrawCanvas(); } }else if(mode==='pan'&&isPanning){ let dx=coord.x-panStart.x, dy=coord.y-panStart.y; view.x+=dx; view.y+=dy; panStart=coord; redrawCanvas(); } }
+        function onPointerUp(e,isTouch){ if(isLongPressActive&&clonedTempRoi){ commitCopyRoi(); e.preventDefault(); return; } if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; } if(mode==='rect'&&isDrawingRect){ let coord=getCanvasCoord(e,isTouch); if(coord){ let endImg=canvasToImage(coord.x,coord.y); let x=Math.min(rectStart.x,endImg.x), y=Math.min(rectStart.y,endImg.y), w=Math.abs(rectStart.x-endImg.x), h=Math.abs(rectStart.y-endImg.y); if(w>5&&h>5) addRectRoi(x,y,w,h); } isDrawingRect=false; redrawCanvas(); }else if(mode==='brush'&&isBrushDrawing){ if(brushPoints.length>=3) addPolygonRoi(brushPoints); else if(brushPoints.length===2) updateStatus("至少需要3个点才能生成区域"); isBrushDrawing=false; brushPoints=[]; brushTempPoints=[]; redrawCanvas(); } if(mode==='pan') isPanning=false; cancelLongPress(); }
+        function setMode(newMode){ mode=newMode; ['rectModeBtn','brushModeBtn','fixedModeBtn','panBtn'].forEach(id=>document.getElementById(id).classList.remove('primary-active')); document.getElementById(`${newMode}ModeBtn`).classList.add('primary-active'); if(mode!=='brush'&&isBrushDrawing){ isBrushDrawing=false; brushPoints=[]; brushTempPoints=[]; redrawCanvas(); } cancelLongPress(); let msg=(mode==='rect')?'矩形模式 (拖拽绘制矩形)':(mode==='brush')?'画笔模式 (按下移动自由画线)':(mode==='fixed')?'固定模式 (单击选中ROI，长按拖拽复制)':'平移模式 (单指拖动)'; updateStatus(msg); }
+        function loadImageFromFile(file){ let reader=new FileReader(); reader.onload=function(e){ let img=new Image(); img.onload=function(){ imgWidth=img.width; imgHeight=img.height; let maxW=Math.min(1000,window.innerWidth-40,imgWidth); let maxH=Math.min(550,window.innerHeight*0.5,imgHeight); canvas.width=maxW; canvas.height=maxH; let tempCanvas=document.createElement('canvas'); tempCanvas.width=imgWidth; tempCanvas.height=imgHeight; let tempCtx=tempCanvas.getContext('2d'); tempCtx.drawImage(img,0,0); let rgba=tempCtx.getImageData(0,0,imgWidth,imgHeight); let gray=new ImageData(imgWidth,imgHeight); for(let i=0;i<rgba.data.length;i+=4){ let g=0.299*rgba.data[i]+0.587*rgba.data[i+1]+0.114*rgba.data[i+2]; gray.data[i]=gray.data[i+1]=gray.data[i+2]=g; gray.data[i+3]=255; } baseImageData=gray; currentImageData=baseImageData; contrast=1.0; document.getElementById('contrastSlider').value=1; applyContrast(); rois=[]; selectedRoiId=null; nextId=1; lastResults=[]; updateRoiList(); clearResultTable(); resetView(); updateStatus("图像已加载"); }; img.src=e.target.result; }; reader.readAsDataURL(file); }
+        function updateStatus(msg){ let statusDiv=document.getElementById('statusMsg'); let modeName=(mode==='rect')?'矩形模式':(mode==='brush')?'画笔模式':(mode==='fixed')?'固定模式':'平移模式'; statusDiv.innerHTML=`✨ ${msg} &nbsp;| 当前: ${modeName}`; }
+        function initUI(){ document.getElementById('loadBtn').onclick=()=>document.getElementById('uploadImage').click(); document.getElementById('uploadImage').onchange=e=>{ if(e.target.files[0]) loadImageFromFile(e.target.files[0]); }; document.getElementById('resetViewBtn').onclick=resetView; document.getElementById('zoomInBtn').onclick=()=>zoomAtCenter(1.2); document.getElementById('zoomOutBtn').onclick=()=>zoomAtCenter(0.8); document.getElementById('rotateLeftBtn').onclick=()=>rotateImage(-90); document.getElementById('rotateRightBtn').onclick=()=>rotateImage(90); document.getElementById('grayscaleBtn').onclick=()=>updateStatus("已是灰度模式"); document.getElementById('autoContrastBtn').onclick=autoEnhanceContrast; document.getElementById('invertBtn').onclick=invert; document.getElementById('rectModeBtn').onclick=()=>setMode('rect'); document.getElementById('brushModeBtn').onclick=()=>setMode('brush'); document.getElementById('fixedModeBtn').onclick=()=>setMode('fixed'); document.getElementById('panBtn').onclick=()=>setMode('pan'); document.getElementById('deleteSelectedBtn').onclick=deleteSelected; document.getElementById('clearAllRoiBtn').onclick=clearAllRoi; document.getElementById('quantifyBtn').onclick=quantify; document.getElementById('exportCsvBtn').onclick=exportToCSV; document.getElementById('resetAdjustBtn').onclick=()=>{ contrast=1.0; document.getElementById('contrastSlider').value=1; document.getElementById('contrastVal').innerText="1.00"; applyContrast(); updateStatus("对比度重置"); }; let cs=document.getElementById('contrastSlider'); cs.addEventListener('input',(e)=>{ contrast=parseFloat(e.target.value); document.getElementById('contrastVal').innerText=contrast.toFixed(2); applyContrast(); }); canvas.addEventListener('touchstart',(e)=>onPointerDown(e,true),{passive:false}); canvas.addEventListener('touchmove',(e)=>onPointerMove(e,true),{passive:false}); canvas.addEventListener('touchend',(e)=>onPointerUp(e,true)); canvas.addEventListener('touchcancel',(e)=>{ isDrawingRect=false; isBrushDrawing=false; cancelLongPress(); }); canvas.addEventListener('mousedown',(e)=>onPointerDown(e,false)); canvas.addEventListener('mousemove',(e)=>onPointerMove(e,false)); canvas.addEventListener('mouseup',(e)=>onPointerUp(e,false)); canvas.style.touchAction='none'; setMode('rect'); }
+        initUI();
+    })();
+
+    // ========== 启动界面与验证层控制 ==========
+    (function() {
+        const splash = document.getElementById('splashScreen');
+        const verificationOverlay = document.getElementById('verificationOverlay');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const pwdInput = document.getElementById('accessPassword');
+        const errorMsgDiv = document.getElementById('pwdErrorMsg');
+        const togglePwd = document.getElementById('togglePwdBtn');
+        const CORRECT_PWD = "SXL1224";
+
+        // 密码显示切换
+        if(togglePwd) {
+            togglePwd.addEventListener('click', () => {
+                const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                pwdInput.setAttribute('type', type);
+                togglePwd.textContent = type === 'password' ? '👁️' : '🙈';
+            });
+        }
+
+        // 启动界面4秒后淡出，然后显示验证层
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if(splash) {
+                    splash.classList.add('fade-out');
+                    setTimeout(() => {
+                        if(splash && splash.parentNode) splash.parentNode.removeChild(splash);
+                        // 显示验证层
+                        verificationOverlay.classList.add('active');
+                    }, 900);
+                } else {
+                    verificationOverlay.classList.add('active');
+                }
+            }, 4000);
+        });
+
+        // 解锁验证
+        function attemptUnlock() {
+            const pwd = pwdInput.value.trim();
+            if(pwd === CORRECT_PWD) {
+                errorMsgDiv.style.display = 'none';
+                verificationOverlay.classList.remove('active');
+                // 可选清除输入框值
+                pwdInput.value = '';
+            } else {
+                errorMsgDiv.style.display = 'block';
+                pwdInput.value = '';
+                pwdInput.focus();
+            }
+        }
+        unlockBtn.addEventListener('click', attemptUnlock);
+        pwdInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') attemptUnlock();
+        });
+    })();
+</script>
+</body>
 </html>
